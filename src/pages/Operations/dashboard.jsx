@@ -37,7 +37,7 @@ export default function Dashboard() {
         return;
       }
 
-      const response = await fetch("http://localhost:5000/api/dashboard", {
+      const response = await fetch("https://good-morning-routine.onrender.com/api/dashboard", {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -80,7 +80,7 @@ export default function Dashboard() {
       const token = localStorage.getItem("token");
       if (!token) return;
 
-      const response = await fetch("http://localhost:5000/api/dashboard/sleep/history?days=7", {
+      const response = await fetch("https://good-morning-routine.onrender.com/api/dashboard/sleep/history?days=7", {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -114,7 +114,7 @@ export default function Dashboard() {
         return;
       }
 
-      const response = await fetch("http://localhost:5000/api/dashboard/checklist", {
+      const response = await fetch("https://good-morning-routine.onrender.com/api/dashboard/checklist", {
         method: "PUT",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -128,7 +128,7 @@ export default function Dashboard() {
       }
 
       // Refresh streak data after checklist update
-      const updatedStreak = await fetch("http://localhost:5000/api/dashboard", {
+      const updatedStreak = await fetch("https://good-morning-routine.onrender.com/api/dashboard", {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -156,7 +156,7 @@ export default function Dashboard() {
         return;
       }
 
-      const response = await fetch("http://localhost:5000/api/dashboard/mood", {
+      const response = await fetch("https://good-morning-routine.onrender.com/api/dashboard/mood", {
         method: "PUT",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -184,7 +184,7 @@ export default function Dashboard() {
         return;
       }
 
-      const response = await fetch("http://localhost:5000/api/dashboard/intention", {
+      const response = await fetch("https://good-morning-routine.onrender.com/api/dashboard/intention", {
         method: "PUT",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -215,7 +215,7 @@ export default function Dashboard() {
         return;
       }
 
-      const response = await fetch("http://localhost:5000/api/dashboard/sleep", {
+      const response = await fetch("https://good-morning-routine.onrender.com/api/dashboard/sleep", {
         method: "PUT",
         headers: {
           "Authorization": `Bearer ${token}`,

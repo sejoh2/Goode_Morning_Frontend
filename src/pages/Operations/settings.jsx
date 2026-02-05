@@ -37,7 +37,7 @@ const Settings = () => {
         return;
       }
 
-      const response = await fetch("http://localhost:5000/api/settings", {
+      const response = await fetch("https://good-morning-routine.onrender.com/api/settings", {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -97,7 +97,7 @@ const Settings = () => {
         return;
       }
 
-      const response = await fetch("http://localhost:5000/api/settings/profile", {
+      const response = await fetch("https://good-morning-routine.onrender.com/api/settings/profile", {
         method: "PUT",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -154,7 +154,7 @@ const Settings = () => {
         [type]: enabled
       }));
 
-      const response = await fetch("http://localhost:5000/api/settings/notifications", {
+      const response = await fetch("https://good-morning-routine.onrender.com/api/settings/notifications", {
         method: "PUT",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -191,7 +191,7 @@ const Settings = () => {
         theme_color: theme
       }));
 
-      const response = await fetch("http://localhost:5000/api/settings/settings", {
+      const response = await fetch("https://good-morning-routine.onrender.com/api/settings/settings", {
         method: "PUT",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -232,7 +232,7 @@ const Settings = () => {
         interface_mode: mode
       }));
 
-      const response = await fetch("http://localhost:5000/api/settings/settings", {
+      const response = await fetch("https://good-morning-routine.onrender.com/api/settings/settings", {
         method: "PUT",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -270,7 +270,7 @@ const Settings = () => {
         return;
       }
 
-      const response = await fetch("http://localhost:5000/api/settings/settings", {
+      const response = await fetch("https://good-morning-routine.onrender.com/api/settings/settings", {
         method: "PUT",
         headers: {
           "Authorization": `Bearer ${token}`,

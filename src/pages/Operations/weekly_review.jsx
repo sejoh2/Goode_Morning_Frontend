@@ -23,7 +23,7 @@ const WeeklyReview = () => {
         return;
       }
 
-      const response = await fetch("http://localhost:5000/api/weekly", {
+      const response = await fetch("https://good-morning-routine.onrender.com/api/weekly", {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -66,7 +66,7 @@ const WeeklyReview = () => {
         return;
       }
 
-      const response = await fetch("http://localhost:5000/api/weekly/generate-report", {
+      const response = await fetch("https://good-morning-routine.onrender.com/api/weekly/generate-report", {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token}`,
