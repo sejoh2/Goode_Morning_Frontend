@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import SleepInputModal from "../../components/SleepInputModal";
 
-
 export default function Dashboard() {
   const [checklist, setChecklist] = useState({
     hydrate: false,
@@ -17,38 +16,78 @@ export default function Dashboard() {
   const [saving, setSaving] = useState(false);
   const [showSleepModal, setShowSleepModal] = useState(false);
   const [sleepHistory, setSleepHistory] = useState([]);
+  const [error, setError] = useState(null);
+
+  // Helper function for authenticated fetch requests
+  const fetchWithAuth = async (url, options = {}) => {
+    const token = localStorage.getItem("token");
+    
+    if (!token) {
+      setError("No authentication token found. Please login again.");
+      throw new Error("No authentication token");
+    }
+
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        ...options.headers,
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (response.status === 401) {
+      // Clear invalid token and redirect
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      setError("Your session has expired. Please login again.");
+      throw new Error("Unauthorized");
+    }
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return response;
+  };
 
   // Fetch dashboard data on component mount
   useEffect(() => {
-    fetchDashboardData();
-    const userData = localStorage.getItem("user");
-    if (userData) {
-      setUser(JSON.parse(userData));
-    }
+    fetchInitialData();
   }, []);
 
-  const fetchDashboardData = async () => {
+  const fetchInitialData = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
+      setError(null);
       
+      const userData = localStorage.getItem("user");
+      if (userData) {
+        setUser(JSON.parse(userData));
+      }
+
+      const token = localStorage.getItem("token");
       if (!token) {
-        console.error("No token found");
+        setError("No authentication token found. Please login.");
         return;
       }
 
-      const response = await fetch("https://good-morning-routine.onrender.com/api/dashboard", {
-        method: "GET",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      // Fetch dashboard data and sleep history in parallel
+      await Promise.all([
+        fetchDashboardData(),
+        fetchSleepHistory()
+      ]);
+    } catch (err) {
+      console.error("Failed to fetch initial data:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
+  const fetchDashboardData = async () => {
+    try {
+      const response = await fetchWithAuth("http://localhost:5000/api/dashboard");
       const data = await response.json();
       
       // Update state with fetched data
@@ -69,72 +108,33 @@ export default function Dashboard() {
       }
     } catch (error) {
       console.error("Failed to fetch dashboard data:", error);
-    } finally {
-      setLoading(false);
+      throw error;
     }
   };
 
   // Fetch sleep history
   const fetchSleepHistory = async () => {
     try {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-
-      const response = await fetch("https://good-morning-routine.onrender.com/api/dashboard/sleep/history?days=7", {
-        method: "GET",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setSleepHistory(data.sleepHistory || []);
-      }
+      const response = await fetchWithAuth("http://localhost:5000/api/dashboard/sleep/history?days=7");
+      const data = await response.json();
+      setSleepHistory(data.sleepHistory || []);
     } catch (error) {
       console.error("Failed to fetch sleep history:", error);
     }
   };
-
-  // Initialize both data fetches
-  useEffect(() => {
-    fetchDashboardData();
-    fetchSleepHistory();
-  }, []);
 
   const handleChecklistChange = async (key) => {
     const updatedChecklist = { ...checklist, [key]: !checklist[key] };
     setChecklist(updatedChecklist);
     
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        console.error("No token found");
-        return;
-      }
-
-      const response = await fetch("https://good-morning-routine.onrender.com/api/dashboard/checklist", {
+      const response = await fetchWithAuth("http://localhost:5000/api/dashboard/checklist", {
         method: "PUT",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify(updatedChecklist),
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
       // Refresh streak data after checklist update
-      const updatedStreak = await fetch("https://good-morning-routine.onrender.com/api/dashboard", {
-        method: "GET",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      }).then(res => res.json());
+      const updatedStreak = await fetchWithAuth("http://localhost:5000/api/dashboard").then(res => res.json());
       
       if (updatedStreak.streak) {
         setStreak(updatedStreak.streak);
@@ -142,6 +142,7 @@ export default function Dashboard() {
     } catch (error) {
       console.error("Failed to update checklist:", error);
       setChecklist(checklist); // Revert on error
+      alert("Failed to update checklist. Please try again.");
     }
   };
 
@@ -150,26 +151,13 @@ export default function Dashboard() {
     setMood(moodIndex);
     
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        console.error("No token found");
-        return;
-      }
-
-      const response = await fetch("https://good-morning-routine.onrender.com/api/dashboard/mood", {
+      await fetchWithAuth("http://localhost:5000/api/dashboard/mood", {
         method: "PUT",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify({ mood: moodValue }),
       });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
     } catch (error) {
       console.error("Failed to update mood:", error);
+      alert("Failed to update mood. Please try again.");
     }
   };
 
@@ -178,24 +166,10 @@ export default function Dashboard() {
     
     setSaving(true);
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        console.error("No token found");
-        return;
-      }
-
-      const response = await fetch("https://good-morning-routine.onrender.com/api/dashboard/intention", {
+      await fetchWithAuth("http://localhost:5000/api/dashboard/intention", {
         method: "PUT",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify({ intention: dailyIntention }),
       });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
 
       alert("Intention saved successfully!");
     } catch (error) {
@@ -209,38 +183,24 @@ export default function Dashboard() {
   // Handle sleep data save
   const handleSaveSleepData = async (sleepData) => {
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        console.error("No token found");
-        return;
-      }
-
-      const response = await fetch("https://good-morning-routine.onrender.com/api/dashboard/sleep", {
+      const response = await fetchWithAuth("http://localhost:5000/api/dashboard/sleep", {
         method: "PUT",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify(sleepData),
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
       const result = await response.json();
-      console.log("Sleep data saved:", result);
       
       // Update local sleep state
       setSleep(result.sleep);
       
       // Refresh sleep history
-      fetchSleepHistory();
+      await fetchSleepHistory();
       
       alert("Sleep data saved successfully!");
       return result;
     } catch (error) {
       console.error("Failed to save sleep data:", error);
+      alert("Failed to save sleep data. Please try again.");
       throw error;
     }
   };
@@ -259,6 +219,12 @@ export default function Dashboard() {
     return "😔 Poor";
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    window.location.reload(); // Or redirect to login page
+  };
+
   if (loading) {
     return (
       <div className="flex-grow p-10 bg-[#fff8f0] flex items-center justify-center">
@@ -270,12 +236,45 @@ export default function Dashboard() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="flex-grow p-10 bg-[#fff8f0] flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <div className="text-4xl mb-4">🔐</div>
+          <h2 className="text-xl font-semibold text-red-600 mb-2">Authentication Required</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button
+            onClick={() => {
+              localStorage.removeItem("token");
+              localStorage.removeItem("user");
+              window.location.reload();
+            }}
+            className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600"
+          >
+            Go to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex-grow p-10 space-y-10 bg-[#fff8f0] text-gray-900">
-      <h1 className="text-2xl font-bold text-gray-900">
-        Good Morning, <span className="capitalize">{user?.name?.split(" ")[0] || "Alex"}</span>!
-      </h1>
-      <p className="text-gray-600 mb-6">Ready to start your day with intention?</p>
+      {/* Header with Logout */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Good Morning, <span className="capitalize">{user?.name?.split(" ")[0] || "Alex"}</span>!
+          </h1>
+          <p className="text-gray-600">Ready to start your day with intention?</p>
+        </div>
+        <button
+          onClick={handleLogout}
+          className="text-sm text-gray-500 hover:text-gray-700 px-3 py-1 rounded border hover:border-gray-300"
+        >
+          Logout
+        </button>
+      </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3 lg:grid-cols-6">
         {/* ✅ Daily Intention Display Card */}

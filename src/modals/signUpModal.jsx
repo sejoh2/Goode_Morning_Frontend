@@ -23,7 +23,7 @@ export default function SignUpModal({ onClose, onSwitch, onSuccess }) {
     setError("");
 
     try {
-      const response = await fetch("https://good-morning-routine.onrender.com/api/auth/signup", {
+      const response = await fetch("http://localhost:5000/api/auth/signup", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -37,16 +37,21 @@ export default function SignUpModal({ onClose, onSwitch, onSuccess }) {
         throw new Error(data.message || "Sign up failed");
       }
 
-      // Store user data
-      localStorage.setItem("user", JSON.stringify(data.user));
+      // Store both token and user data
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+      }
+      if (data.user) {
+        localStorage.setItem("user", JSON.stringify(data.user));
+      }
       
       // Show loading spinner for a moment
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Close modal and trigger success callback
+      // Close modal and trigger success callback with both user and token
       onClose();
       if (onSuccess) {
-        onSuccess(data.user);
+        onSuccess(data.user, data.token);
       }
 
     } catch (err) {
