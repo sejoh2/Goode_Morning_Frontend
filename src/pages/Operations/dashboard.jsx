@@ -87,7 +87,7 @@ export default function Dashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      const response = await fetchWithAuth("http://localhost:5000/api/dashboard");
+      const response = await fetchWithAuth("https://good-morning-routine.onrender.com/api/dashboard");
       const data = await response.json();
       
       // Update state with fetched data
@@ -115,7 +115,7 @@ export default function Dashboard() {
   // Fetch sleep history
   const fetchSleepHistory = async () => {
     try {
-      const response = await fetchWithAuth("http://localhost:5000/api/dashboard/sleep/history?days=7");
+      const response = await fetchWithAuth("https://good-morning-routine.onrender.com/api/dashboard/sleep/history?days=7");
       const data = await response.json();
       setSleepHistory(data.sleepHistory || []);
     } catch (error) {
@@ -128,13 +128,13 @@ export default function Dashboard() {
     setChecklist(updatedChecklist);
     
     try {
-      const response = await fetchWithAuth("http://localhost:5000/api/dashboard/checklist", {
+      const response = await fetchWithAuth("https://good-morning-routine.onrender.com/api/dashboard/checklist", {
         method: "PUT",
         body: JSON.stringify(updatedChecklist),
       });
 
       // Refresh streak data after checklist update
-      const updatedStreak = await fetchWithAuth("http://localhost:5000/api/dashboard").then(res => res.json());
+      const updatedStreak = await fetchWithAuth("https://good-morning-routine.onrender.com/api/dashboard").then(res => res.json());
       
       if (updatedStreak.streak) {
         setStreak(updatedStreak.streak);
@@ -151,7 +151,7 @@ export default function Dashboard() {
     setMood(moodIndex);
     
     try {
-      await fetchWithAuth("http://localhost:5000/api/dashboard/mood", {
+      await fetchWithAuth("https://good-morning-routine.onrender.com/api/dashboard/mood", {
         method: "PUT",
         body: JSON.stringify({ mood: moodValue }),
       });
@@ -166,7 +166,7 @@ export default function Dashboard() {
     
     setSaving(true);
     try {
-      await fetchWithAuth("http://localhost:5000/api/dashboard/intention", {
+      await fetchWithAuth("https://good-morning-routine.onrender.com/api/dashboard/intention", {
         method: "PUT",
         body: JSON.stringify({ intention: dailyIntention }),
       });
@@ -183,7 +183,7 @@ export default function Dashboard() {
   // Handle sleep data save
   const handleSaveSleepData = async (sleepData) => {
     try {
-      const response = await fetchWithAuth("http://localhost:5000/api/dashboard/sleep", {
+      const response = await fetchWithAuth("https://good-morning-routine.onrender.com/api/dashboard/sleep", {
         method: "PUT",
         body: JSON.stringify(sleepData),
       });
